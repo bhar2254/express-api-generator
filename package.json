@@ -1,0 +1,33 @@
+{
+  "name": "@bhar2254/express-api-generator",
+  "version": "1.0.1",
+  "description": "A simple NPM package for generating basic express.js endpoints for your attached databse.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node example.js"
+  },
+  "keywords": [
+    "express",
+    "api",
+    "generator",
+    "rest",
+    "easy"
+  ],
+  "author": "Blaine Harper",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "uuid": "^11.0.3"
+  },
+  "peerDependencies": {
+    "mysql2": "^3.0.0",
+    "sqlite3": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "mysql2": "^3.0.0",
+    "sqlite3": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
