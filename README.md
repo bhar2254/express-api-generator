@@ -16,7 +16,7 @@ This package provides an easy way to generate RESTful API routes for Express.js 
 To use this package, simply install it from npm:
 
 ```bash
-npm install express-api-routes
+npm i @bhar2254/express-api-generator
 ```
 
 ## Usage
