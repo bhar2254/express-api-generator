@@ -110,7 +110,7 @@ initializeAPI(app, {
 You can define routes that require specific scopes using the `checkScope` middleware. Here’s an example of how to define routes with scope restrictions:
 
 ```javascript
-const { checkScope } = require('express-api-routes');
+const { checkScope } = require('@bhar2254/express-api-generator');
 
 router.get('/resource', checkScope('read'), async (req, res) => {
   try {
@@ -190,7 +190,7 @@ initializeAPI(app, {
 
 ```javascript
 const express = require('express');
-const { checkScope } = require('express-api-routes'); // Scope checking middleware
+const { checkScope } = require('@bhar2254/express-api-generator'); // Scope checking middleware
 
 const router = express.Router();
 
