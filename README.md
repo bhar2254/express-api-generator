@@ -27,7 +27,7 @@ First, import the necessary modules and set up your Express app.
 
 ```javascript
 const express = require('express');
-const { initializeAPI } = require('express-api-routes');
+const { initializeAPI } = require('@bhar2254/express-api-generator');
 
 const app = express();
 
