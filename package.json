@@ -13,6 +13,10 @@
     "rest",
     "easy"
   ],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bhar2254/express-api-generator.git"
+	},
   "author": "Blaine Harper",
   "license": "GPL-3.0",
   "dependencies": {
