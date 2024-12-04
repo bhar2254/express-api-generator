@@ -16,7 +16,7 @@ This package provides an easy way to generate RESTful API routes for Express.js 
 To use this package, simply install it from npm:
 
 ```bash
-npm install express-api-routes
+npm i @bhar2254/express-api-generator
 ```
 
 ## Usage
@@ -27,7 +27,7 @@ First, import the necessary modules and set up your Express app.
 
 ```javascript
 const express = require('express');
-const { initializeAPI } = require('express-api-routes');
+const { initializeAPI } = require('@bhar2254/express-api-generator');
 
 const app = express();
 
@@ -110,7 +110,7 @@ initializeAPI(app, {
 You can define routes that require specific scopes using the `checkScope` middleware. Here’s an example of how to define routes with scope restrictions:
 
 ```javascript
-const { checkScope } = require('express-api-routes');
+const { checkScope } = require('@bhar2254/express-api-generator');
 
 router.get('/resource', checkScope('read'), async (req, res) => {
   try {
@@ -190,7 +190,7 @@ initializeAPI(app, {
 
 ```javascript
 const express = require('express');
-const { checkScope } = require('express-api-routes'); // Scope checking middleware
+const { checkScope } = require('@bhar2254/express-api-generator'); // Scope checking middleware
 
 const router = express.Router();
 
