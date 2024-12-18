@@ -102,4 +102,44 @@ function initializeAPI(app, config) {
 
     console.log(`API initialized with version /api/${config.version}`);
 }
-module.exports = { initializeAPI, getDatabase };
+
+const generateAPIKey = async (req, res, next) => {
+    try {
+        // Generate a new UUID v4 for the API key
+        const apiKey = crypto.randomUUID();
+
+        // Optionally accept a scope in the request body (default to empty string if not provided)
+        const { scope = 'read' } = req.body;
+
+        // Insert the new API key into the database
+        const data = { api_key: apiKey, scopes: scope }
+        const columns = Object.keys(data).join(', ');
+        const placeholders = Object.keys(data).map(() => '?').join(', ');
+        const values = Object.values(data);
+        const query = `INSERT INTO api_keys (${columns}) VALUES (${placeholders})`;
+
+        let result;
+        const db = getDatabase();
+        if (db.query) {
+            // MySQL
+            [result] = await db.query(query, values);
+            // return res.json({ message: 'Item inserted successfully', id: result.insertId });
+        } else {
+            // SQLite
+            result = await db.run(query, values);
+            // return res.json({ message: 'Item inserted successfully', id: result.lastID });
+        }
+
+        // Respond with the newly created API key
+        return res.status(201).json({
+            message: 'API key generated successfully',
+            apiKey: apiKey,
+            scope: scope,
+        });
+    } catch (err) {
+        console.error('Error generating API key:', err);
+        return res.status(500).json({ message: 'Error generating API key' });
+    }
+}
+
+module.exports = { initializeAPI, getDatabase, generateAPIKey };

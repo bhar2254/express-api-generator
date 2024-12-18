@@ -28,65 +28,55 @@ const disabledTables = ['api_keys']
 function generateRoutes() {
     const router = express.Router();
 
-    const generateAPIKey = async (req, res, next) => {
-        try {
-            // Generate a new UUID v4 for the API key
-            const apiKey = crypto.randomUUID();
-
-            // Optionally accept a scope in the request body (default to empty string if not provided)
-            const { scope = 'read' } = req.body;
-
-            // Insert the new API key into the database
-            const data = { api_key: apiKey, scopes: scope }
-            const columns = Object.keys(data).join(', ');
-            const placeholders = Object.keys(data).map(() => '?').join(', ');
-            const values = Object.values(data);
-            const query = `INSERT INTO api_keys (${columns}) VALUES (${placeholders})`;
-
-            let result;
-            const db = getDatabase();
-            if (db.query) {
-                // MySQL
-                [result] = await db.query(query, values);
-                return res.json({ message: 'Item inserted successfully', id: result.insertId });
-            } else {
-                // SQLite
-                result = await db.run(query, values);
-                return res.json({ message: 'Item inserted successfully', id: result.lastID });
-            }
-
-            // Respond with the newly created API key
-            return res.status(201).json({
-                message: 'API key generated successfully',
-                apiKey: apiKey,
-                scope: scope,
-            });
-        } catch (err) {
-            console.error('Error generating API key:', err);
-            return res.status(500).json({ message: 'Error generating API key' });
-        }
-    }
-
 // Route to fetch an entire table
-    router.get('/generate-api-key', generateAPIKey);
-    router.post('/generate-api-key', generateAPIKey);
+    // router.get('/generate-api-key', generateAPIKey);
+    // router.post('/generate-api-key', generateAPIKey);
     
     router.get('/:table', validateApiKey(), checkScope('read'), async (req, res) => {
         const { table } = req.params;
-        if(disabledTables.includes(table))
-            return res.status(500).json({ error: 'You do not have permission to access this resource!'});
-
+        const { where, order, limit, offset } = req.query; // capture query params
+        
+        // Check if the table is in the disabled list
+        if (disabledTables.includes(table)) {
+            return res.status(500).json({ error: 'You do not have permission to access this resource!' });
+        }
+        
+        // Construct the SQL query safely with defaults
+        let query = `SELECT * FROM ${table}`;
+        const params = [];
+    
+        // Add WHERE clause if specified (parameterized)
+        if (where) {
+            query += ' WHERE ' + where; // Validate this or use a safe mechanism to build the WHERE clause
+            // You might want to sanitize 'where' to ensure it's a safe and valid SQL fragment
+        }
+    
+        // Add ORDER BY clause if specified
+        if (order) {
+            query += ' ORDER BY ' + order; // Validate order parameter to prevent SQL injection
+        }
+    
+        // Add LIMIT and OFFSET for pagination
+        if (limit) {
+            query += ' LIMIT ?';
+            params.push(parseInt(limit, 10));
+        }
+        if (offset) {
+            query += ' OFFSET ?';
+            params.push(parseInt(offset, 10));
+        }
+    
         try {
             const db = getDatabase();
-            const query = `SELECT * FROM ${table}`;
-            
             let rows;
+    
+            // Execute the query with parameters (parameterized query for safety)
             if (db.query) {
                 // MySQL
-                [rows] = await db.query(query);
+                [rows] = await db.query(query, params);
             } else {
                 // SQLite
-                rows = await db.all(query);
+                rows = await db.all(query, params);
             }
     
             return res.json(rows);
@@ -94,50 +84,62 @@ function generateRoutes() {
             return res.status(500).json({ error: 'Database query failed', details: error.message });
         }
     });
+    
   
     // GET: Fetch entire table or single object by ident
-    router.get('/:table/:ident', validateApiKey(), checkScope('read'), async (req, res) => {
-        const { table, ident } = req.params;
-        if(disabledTables.includes(table))
-            return res.status(500).json({ error: 'You do not have permission to access this resource!'});
-        const queryKey = req.query.key;  // Optional query key for custom searches
-
+    router.get('/:table', validateApiKey(), checkScope('read'), async (req, res) => {
+        const { table } = req.params;
+        const { where, order, limit, offset } = req.query; // capture query params
+        
+        // Check if the table is in the disabled list
+        if (disabledTables.includes(table)) {
+            return res.status(500).json({ error: 'You do not have permission to access this resource!' });
+        }
+    
+        // Construct the SQL query safely with defaults
+        let query = `SELECT * FROM ${table}`;
+        const params = [];
+    
+        // Add WHERE clause if specified (parameterized)
+        if (where) {
+            query += ' WHERE ' + where; // Validate this or use a safe mechanism to build the WHERE clause
+            // You might want to sanitize 'where' to ensure it's a safe and valid SQL fragment
+        }
+    
+        // Add ORDER BY clause if specified
+        if (order) {
+            query += ' ORDER BY ' + order; // Validate order parameter to prevent SQL injection
+        }
+    
+        // Add LIMIT and OFFSET for pagination
+        if (limit) {
+            query += ' LIMIT ?';
+            params.push(parseInt(limit, 10));
+        }
+        if (offset) {
+            query += ' OFFSET ?';
+            params.push(parseInt(offset, 10));
+        }
+    
         try {
             const db = getDatabase();
-            let query, params;
-
-            if (!ident) {
-                // No ident provided: Fetch entire table
-                query = `SELECT * FROM ${table}`;
-                params = [];
-            } else if (validateGUID(ident)) {
-                // ident is a valid GUID: Search by 'guid' field
-                query = `SELECT * FROM ${table} WHERE guid = ?`;
-                params = [ident];
-            } else if (queryKey) {
-                // Custom query key provided: Search by queryKey field
-                query = `SELECT * FROM ${table} WHERE ${queryKey} = ?`;
-                params = [ident];
-            } else {
-                // Default case: Search by 'id' field
-                query = `SELECT * FROM ${table} WHERE id = ?`;
-                params = [ident];
-            }
-
             let rows;
+    
+            // Execute the query with parameters (parameterized query for safety)
             if (db.query) {
-                // MySQL query
+                // MySQL
                 [rows] = await db.query(query, params);
             } else {
-                // SQLite query
+                // SQLite
                 rows = await db.all(query, params);
             }
-
+    
             return res.json(rows);
         } catch (error) {
             return res.status(500).json({ error: 'Database query failed', details: error.message });
         }
     });
+    
 
     // POST: Insert a new object into the table
     router.post('/:table', validateApiKey(), checkScope('write'), async (req, res) => {
